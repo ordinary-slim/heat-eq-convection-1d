@@ -13,9 +13,10 @@ int main(){
     // input params
     float a = 0.0;
     float b = 1.0;
+    float Tenv = 20.0;
     float conduc = 1.0;
     float convec = 1.0;
-    float Tfinal = 10;
+    float Tfinal = 1;
 
     float L = b - a;
 
@@ -48,6 +49,8 @@ int main(){
     //allocation of problem matrices
     MatrixXd M = MatrixXd::Zero(nnodes, nnodes);
     MatrixXd A = MatrixXd::Zero(nnodes, nnodes);
+    //implicit initial condition
+    VectorXd u = VectorXd::Zero(nnodes);
     VectorXd load = VectorXd::Zero(nnodes);
 
     //assembly
@@ -67,13 +70,27 @@ int main(){
         A(seq(i, i+1), seq(i, i+1)) += Aloc;
     }
 
-    cout << M << endl << endl;
-    cout << A << endl;
-    cout << load << endl;
 
     // BCs: convection
-    A(0, 0) += conduc*convec;
-    A(nnodes-1, nnodes-1) += -conduc*convec;
+    A(0, 0) += -conduc*convec;
+    A(nnodes-1, nnodes-1) += +conduc*convec;
+    load(0) += -conduc*convec*Tenv;
+    load(nnodes-1) += +conduc*convec*Tenv;
+
+    //time loop
+    float t = 0.0; 
+    while(t<Tfinal){
+      t += dt;
+      //algebra for forward euler
+      // M un+1 = Mun - dt Aun
+      VectorXd RHS = VectorXd::Zero(nnodes);
+      RHS += M*u + dt * (-A*u + load);
+
+      //solve M*u = RHS
+      u = M.partialPivLu().solve( RHS );
+      cout << u << endl << endl;
+    }
+
     //for (int j=0; j<nnodes; j++){
         //cout << "[ ";
         //for (int k=0; k<nnodes; k++){
