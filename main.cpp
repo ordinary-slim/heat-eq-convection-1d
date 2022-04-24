@@ -73,7 +73,7 @@ int main(){
 
     // BCs: convection
     A(0, 0) += conduc*convec;
-    A(nnodes, nnodes) += -conduc*convec;
+    A(nnodes-1, nnodes-1) += -conduc*convec;
     //for (int j=0; j<nnodes; j++){
         //cout << "[ ";
         //for (int k=0; k<nnodes; k++){
