@@ -8,7 +8,7 @@ int main(){
 
     // Heat equation:
     // dt T + k Delta T = 0 with initial condition
-    // and dirichlet BCs
+    // and convection at Tenv
 
     // input params
     float a = 0.0;
@@ -73,9 +73,9 @@ int main(){
 
     // BCs: convection
     A(0, 0) += -conduc*convec;
-    A(nnodes-1, nnodes-1) += +conduc*convec;
+    A(nnodes-1, nnodes-1) += -conduc*convec;
     load(0) += -conduc*convec*Tenv;
-    load(nnodes-1) += +conduc*convec*Tenv;
+    load(nnodes-1) += -conduc*convec*Tenv;
 
     //time loop
     float t = 0.0; 
