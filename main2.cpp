@@ -6,8 +6,10 @@
 
 using namespace std;
 
+void ReadPhysicalNames( ifstream &file, Mesh &m );
 void ReadNodes( ifstream &file, Mesh &m );
 void ReadElements( ifstream &file, Mesh &m );
+int readParams( stringstream &ss, double params[] );
 
 int main(){
     string fileName = "gmsh_examples/square.msh";
@@ -21,7 +23,10 @@ int main(){
             regex rgx(R"(^\$(\w+))");
             smatch m;
             if (regex_search(line, m, rgx)){
-                if (m.str(1)=="Nodes"){
+                if (m.str(1)=="PhysicalNames") {
+                    cout << "Processing physical tags!" << endl;
+                    ReadPhysicalNames( meshFile, mesh );
+                } else if (m.str(1)=="Nodes"){
                     cout << "Processing nodes!" << endl;
                     ReadNodes( meshFile, mesh );
                 } else if (m.str(1)=="Elements"){
@@ -37,39 +42,77 @@ int main(){
     meshFile.close();
 }
 
+void ReadPhysicalNames( ifstream &file, Mesh &mesh ){
+    double params[50];
+    int level = 0, paramCount = 0;
+    int numPhysicalTags = 0;
+    regex eoBlock( R"(^\$EndPhysicalNames)" );
+    string line;
+    stringstream ss;
+
+    while (getline(file, line) ){
+        if (regex_search(line, eoBlock)) {
+            return;
+        }
+        ss.str(line);
+        ss.clear();
+
+        paramCount = readParams( ss, params );
+
+        if (level==0){
+          numPhysicalTags = params[0];
+          level++;
+        } else {
+          paramCount = readParams( ss, params );
+          //params[0] is dim o tag params[1] is tag #
+        }
+    }
+}
 void ReadNodes( ifstream &file, Mesh &mesh ){
     regex eoBlock( R"(^\$EndNodes)" );
-    int a, b, c, d;
-    int count = 0;
-    double x, y, z, w;
+    double params[50];
+    int level = 0;
+    int paramCount, tnodeCount = 0, bnodeCount = 0;
+    int counter = 0;
     string line;
     getline( file, line );
     stringstream ss(line);
     //read first line
-    if (ss >> a >> b >> c >> d){
-        mesh.nnodes = b;
-        mesh.xnodes.resize( mesh.nnodes );
-        //read entities, node tags and node positions
-        while (getline(file, line) ){
-            if (regex_match(line, eoBlock)) {
-                return;
-            }
-            ss.str(line);
-            ss.clear();
-            //try to read entity declaration
-            if (ss >> a >> b >> c >> d){
-                //update dimension of mesh
-                mesh.dim = max( a, mesh.dim );
-                continue;
-            }
-            ss.clear();
-            ss.str(line);
-            //try to read node coords
-            if (ss >> x >> y >> z){
-                mesh.xnodes[count] = {x, y, z};
-                count += 1;
-                continue;
-            }
+
+    paramCount = readParams( ss, params);
+    mesh.nnodes = params[1];
+    mesh.xnodes.resize( mesh.nnodes );
+
+    //read entities, node tags and node positions
+    while (getline(file, line) ){
+        if (regex_search(line, eoBlock)) {
+            return;
+        }
+
+        ss.str(line);
+        ss.clear();
+
+        paramCount = readParams( ss, params );
+
+        if (level==0){
+          //read entity
+          mesh.dim = max( int(params[0]), mesh.dim );
+          bnodeCount = params[3];
+          counter = params[3];
+          level++;
+        } else if( level==1){
+          counter--;
+          if (counter==0){
+            level = 2;
+          }
+        } else if( level==2){
+          mesh.xnodes[tnodeCount] = {params[0], params[1], params[2]};
+          tnodeCount++;
+          counter++;
+          //printf("read node (%2.2f , %2.2f , %2.2f)\n", params[0], params[1], params[2]);
+          if (counter == bnodeCount) {
+            level = 0;
+          }
         }
     }
 
@@ -96,6 +139,10 @@ void ReadElements( ifstream &file, Mesh &mesh ){
     return;
 }
 
-int readParams( stringstream &ss, int& params[] ){
-    return 0;
+int readParams( stringstream &ss, double params[] ){
+    int count = 0;
+    while( ss >> params[count] ){
+      count++;
+    }
+    return count;
 }

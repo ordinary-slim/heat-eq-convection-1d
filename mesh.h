@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <iostream>
-#include <Array>
-#include <Vector>
+#include <array>
+#include <vector>
 
 using namespace std;
 
@@ -18,7 +18,7 @@ class Mesh {
         }
         void printNodes(){
             int count = 0;
-            printf("nnodes = %d, dim = %d\n", dim);
+            printf("nnodes = %d, dim = %d\n", nnodes, dim);
             for (int i =0; i < xnodes.size(); i++){
                 printf("Node #%2d:   ", i);
                 for (int j =0; j < 3; j++){
