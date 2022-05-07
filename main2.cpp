@@ -2,11 +2,13 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+#include <vector>
 #include "mesh.h"
 
 using namespace std;
 
-void ReadPhysicalNames( ifstream &file, Mesh &m );
+void ReadPhysicalNames( ifstream &file, Mesh &m, vector<int> & physicalTags );
+void ReadEntities( ifstream &file, Mesh &m, vector<int> & physicalTags);
 void ReadNodes( ifstream &file, Mesh &m );
 void ReadElements( ifstream &file, Mesh &m );
 int readParams( stringstream &ss, double params[] );
@@ -14,6 +16,7 @@ int readParams( stringstream &ss, double params[] );
 int main(){
     string fileName = "gmsh_examples/square.msh";
     Mesh mesh;
+    vector<int> physicalTags;
 
     ifstream meshFile( fileName );
     string line;
@@ -25,9 +28,18 @@ int main(){
             if (regex_search(line, m, rgx)){
                 if (m.str(1)=="PhysicalNames") {
                     cout << "Processing physical tags!" << endl;
-                    ReadPhysicalNames( meshFile, mesh );
+                    cout << "-------------------------" << endl;
+                    ReadPhysicalNames( meshFile, mesh, physicalTags );
+                    for (vector<int>::iterator it = begin(physicalTags); it != end(physicalTags); it++){
+                      cout << "physical tag: " << *it << endl;
+                    }
+                } else if (m.str(1)=="Entities"){
+                    cout << "Processing entities:" << endl;
+                    cout << "-------------------------" << endl;
+                    ReadEntities( meshFile, mesh, physicalTags );
                 } else if (m.str(1)=="Nodes"){
                     cout << "Processing nodes!" << endl;
+                    cout << "-----------------" << endl;
                     ReadNodes( meshFile, mesh );
                 } else if (m.str(1)=="Elements"){
                     cout << "Processing elements!" << endl;
@@ -39,12 +51,13 @@ int main(){
     cout << "My mesh is " << mesh.dim << "-dimensional." << endl;
     mesh.myprint();
     mesh.printNodes();
+    //end 
     meshFile.close();
 }
 
-void ReadPhysicalNames( ifstream &file, Mesh &mesh ){
+void ReadPhysicalNames( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
     double params[50];
-    int level = 0, paramCount = 0;
+    int level = 0, paramCount = 0, count = 0;
     int numPhysicalTags = 0;
     regex eoBlock( R"(^\$EndPhysicalNames)" );
     string line;
@@ -61,10 +74,35 @@ void ReadPhysicalNames( ifstream &file, Mesh &mesh ){
 
         if (level==0){
           numPhysicalTags = params[0];
+          physicalTags.resize(numPhysicalTags);
           level++;
         } else {
-          paramCount = readParams( ss, params );
           //params[0] is dim o tag params[1] is tag #
+          physicalTags[count] = params[1];
+          count++;
+        }
+    }
+}
+void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
+    double params[50];
+    int level = 0, paramCount = 0, count = 0;
+    regex eoBlock( R"(^\$EndEntities)" );
+    string line;
+    stringstream ss;
+
+    while (getline(file, line) ){
+        if (regex_search(line, eoBlock)) {
+            return;
+        }
+        ss.str(line);
+        ss.clear();
+
+        paramCount = readParams( ss, params );
+
+        cout << line << endl;
+
+        if (level==0){
+        } else {
         }
     }
 }
@@ -81,7 +119,7 @@ void ReadNodes( ifstream &file, Mesh &mesh ){
 
     paramCount = readParams( ss, params);
     mesh.nnodes = params[1];
-    mesh.xnodes.resize( mesh.nnodes );
+    mesh.nodes.resize( mesh.nnodes );
 
     //read entities, node tags and node positions
     while (getline(file, line) ){
@@ -106,7 +144,7 @@ void ReadNodes( ifstream &file, Mesh &mesh ){
             level = 2;
           }
         } else if( level==2){
-          mesh.xnodes[tnodeCount] = {params[0], params[1], params[2]};
+          mesh.nodes[tnodeCount] = {params[0], params[1], params[2]};
           tnodeCount++;
           counter++;
           //printf("read node (%2.2f , %2.2f , %2.2f)\n", params[0], params[1], params[2]);

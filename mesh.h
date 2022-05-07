@@ -11,7 +11,8 @@ class Mesh {
         int nels;
         int dim = 0;
         vector<vector<int>> lnodes;
-        vector<std::array<double, 3>> xnodes;
+        vector<std::array<double, 3>> nodes;
+        vector<int> bc_nodes;
 
         void myprint(){
             cout << "Hello from mesh!" << endl;
@@ -19,10 +20,10 @@ class Mesh {
         void printNodes(){
             int count = 0;
             printf("nnodes = %d, dim = %d\n", nnodes, dim);
-            for (int i =0; i < xnodes.size(); i++){
+            for (int i =0; i < nodes.size(); i++){
                 printf("Node #%2d:   ", i);
                 for (int j =0; j < 3; j++){
-                    printf("%8.2f", xnodes[i][j]);
+                    printf("%8.2f", nodes[i][j]);
                 }
                 cout << endl;
             }
