@@ -86,7 +86,7 @@ void ReadPhysicalNames( ifstream &file, Mesh &mesh, vector<int> & physicalTags )
     }
 }
 void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
-    int params[50];
+    double params[50];
     int level = 0, paramCount = 0, counter = 0;
     int numPoints, numCurves, numSurfaces, numVolumes;
     int numPhysicalTags; //num physical tags in an entity
@@ -102,7 +102,7 @@ void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
         ss.str(line);
         ss.clear();
 
-        paramCount = readParams<int>( ss, params );
+        paramCount = readParams<double>( ss, params );
 
         cout << line << endl;
         cout << "counter: " << counter << "level:" << level << endl;
@@ -132,6 +132,7 @@ void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
         } else if( level==2 ){
           //reading curves
           numPhysicalTags = params[7];
+          cout << "# pt: " << numPhysicalTags << endl;
           if (numPhysicalTags>0){
             physicalGroups.push_back({1, params[0], params[8]}); 
           }else{
@@ -171,7 +172,7 @@ void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
         }
         for (int i=0; i < physicalGroups.size(); i++){
           cout << "[";
-          for (int j=0; j < physicalGroups.size(); j++){ 
+          for (int j=0; j < physicalGroups[i].size(); j++){ 
             cout << physicalGroups[i][j] << ", ";
           }
           cout << "]" << endl;
