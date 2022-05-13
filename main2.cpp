@@ -13,8 +13,9 @@ void ReadNodes( ifstream &file, Mesh &m );
 void ReadElements( ifstream &file, Mesh &m );
 int readParams( stringstream &ss, double params[] );
 
-int main(){
-    string fileName = "gmsh_examples/square.msh";
+int main(int argc, char *argv[]){
+    string fileName = argv[1];
+    cout << "About to read: " << fileName << endl;
     Mesh mesh;
     vector<int> physicalTags;
 
@@ -49,8 +50,7 @@ int main(){
         }
     }
     cout << "My mesh is " << mesh.dim << "-dimensional." << endl;
-    mesh.myprint();
-    mesh.printNodes();
+    //mesh.printNodes();
     //end 
     meshFile.close();
 }
@@ -85,7 +85,10 @@ void ReadPhysicalNames( ifstream &file, Mesh &mesh, vector<int> & physicalTags )
 }
 void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
     double params[50];
-    int level = 0, paramCount = 0, count = 0;
+    int level = 0, paramCount = 0, counter = 0;
+    int numPoints, numCurves, numSurfaces, numVolumes;
+    int numPhysicalTags; //num physical tags in an entity
+    vector<vector<int>> physicalGroups;
     regex eoBlock( R"(^\$EndEntities)" );
     string line;
     stringstream ss;
@@ -100,9 +103,76 @@ void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
         paramCount = readParams( ss, params );
 
         cout << line << endl;
+        cout << "counter: " << counter << "level:" << level << endl;
 
         if (level==0){
-        } else {
+          numPoints = params[0];
+          numCurves = params[1];
+          numSurfaces = params[2];
+          numVolumes = params[3];
+          //assuming for the moment ea group has a single! physical group
+          //physicalGroups.resize(numEntities);
+          level++;
+        } else if( level==1 ){
+          //reading points
+          numPhysicalTags = params[4];
+          if (numPhysicalTags>0){
+            cout << params[5] << endl;
+            physicalGroups.push_back(params[5]); 
+          }else{
+            physicalGroups.push_back(-1); 
+          }
+          counter++;
+          if (counter==numPoints) {
+            level++;
+            counter = 0;
+          }
+        } else if( level==2 ){
+          //reading curves
+          numPhysicalTags = params[7];
+          if (numPhysicalTags>0){
+            physicalGroups.push_back(params[8]); 
+          }else{
+            physicalGroups.push_back(-1); 
+          }
+          counter++;
+          if (counter==numCurves) {
+            level++;
+            counter = 0;
+          }
+        } else if( level==3 ){
+          //reading surface
+          numPhysicalTags = params[7];
+          if (numPhysicalTags>0){
+            physicalGroups.push_back(params[8]); 
+          }else{
+            physicalGroups.push_back(-1); 
+          }
+          counter++;
+          if (counter==numSurfaces) {
+            level++;
+            counter = 0;
+          }
+        } else if( level==3 ){
+          //reading surface
+          numPhysicalTags = params[7];
+          if (numPhysicalTags>0){
+            physicalGroups.push_back(params[8]); 
+          }else{
+            physicalGroups.push_back(-1); 
+          }
+          counter++;
+          if (counter==numVolumes) {
+            level++;
+            counter = 0;
+          }
+        }
+        for (int i=0; i < physicalGroups.size(); i++){
+          cout << "[" << endl;
+          for (int j=0; j < physicalGroups.size(); j++){ 
+            cout << physicalGroups[i][j] << endl;
+          }
+          cout << "]" << endl;
         }
     }
 }
@@ -112,6 +182,7 @@ void ReadNodes( ifstream &file, Mesh &mesh ){
     int level = 0;
     int paramCount, tnodeCount = 0, bnodeCount = 0;
     int counter = 0;
+    int entityTag = -1;
     string line;
     getline( file, line );
     stringstream ss(line);
@@ -135,6 +206,7 @@ void ReadNodes( ifstream &file, Mesh &mesh ){
         if (level==0){
           //read entity
           mesh.dim = max( int(params[0]), mesh.dim );
+          entityTag = params[1];
           bnodeCount = params[3];
           counter = params[3];
           level++;
@@ -177,6 +249,14 @@ void ReadElements( ifstream &file, Mesh &mesh ){
     return;
 }
 
+//Could use template type here!
+int readIntegers( stringstream &ss, int params[] ){
+    int count = 0;
+    while( ss >> params[count] ){
+      count++;
+    }
+    return count;
+}
 int readParams( stringstream &ss, double params[] ){
     int count = 0;
     while( ss >> params[count] ){
