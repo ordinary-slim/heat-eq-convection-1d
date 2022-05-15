@@ -58,7 +58,7 @@ int main(int argc, char *argv[]){
 }
 
 void ReadPhysicalNames( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
-    double params[50];
+    int params[50];
     int level = 0, paramCount = 0, count = 0;
     int numPhysicalTags = 0;
     regex eoBlock( R"(^\$EndPhysicalNames)" );
@@ -72,7 +72,7 @@ void ReadPhysicalNames( ifstream &file, Mesh &mesh, vector<int> & physicalTags )
         ss.str(line);
         ss.clear();
 
-        paramCount = readParams<double>( ss, params );
+        paramCount = readParams<int>( ss, params );
 
         if (level==0){
           numPhysicalTags = params[0];
@@ -120,9 +120,9 @@ void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
           numPhysicalTags = params[4];
           if (numPhysicalTags>0){
             cout << params[5] << endl;
-            physicalGroups.push_back({0, params[0], params[5]}); 
+            physicalGroups.push_back({0, int(params[0]), int(params[5])}); 
           }else{
-            physicalGroups.push_back({0, params[0], -1}); 
+            physicalGroups.push_back({0, int(params[0]), -1}); 
           }
           counter++;
           if (counter==numPoints) {
@@ -131,12 +131,12 @@ void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
           }
         } else if( level==2 ){
           //reading curves
-          numPhysicalTags = params[7];
+          numPhysicalTags = int(params[7]);
           cout << "# pt: " << numPhysicalTags << endl;
           if (numPhysicalTags>0){
-            physicalGroups.push_back({1, params[0], params[8]}); 
+            physicalGroups.push_back({1, int(params[0]), int(params[8])}); 
           }else{
-            physicalGroups.push_back({1, params[0], -1}); 
+            physicalGroups.push_back({1, int(params[0]), -1}); 
           }
           counter++;
           if (counter==numCurves) {
@@ -145,11 +145,11 @@ void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
           }
         } else if( level==3 ){
           //reading surface
-          numPhysicalTags = params[7];
+          numPhysicalTags = int(params[7]);
           if (numPhysicalTags>0){
-            physicalGroups.push_back({2, params[0], params[8]}); 
+            physicalGroups.push_back({2, int(params[0]), int(params[8])}); 
           }else{
-            physicalGroups.push_back({2, params[0], -1}); 
+            physicalGroups.push_back({2, int(params[0]), -1}); 
           }
           counter++;
           if (counter==numSurfaces) {
@@ -158,11 +158,11 @@ void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
           }
         } else if( level==4 ){
           //reading volume
-          numPhysicalTags = params[7];
+          numPhysicalTags = int(params[7]);
           if (numPhysicalTags>0){
-            physicalGroups.push_back({3, params[0], params[8]}); 
+            physicalGroups.push_back({3, int(params[0]), int(params[8])}); 
           }else{
-            physicalGroups.push_back({3, params[0], -1}); 
+            physicalGroups.push_back({3, int(params[0]), -1}); 
           }
           counter++;
           if (counter==numVolumes) {
