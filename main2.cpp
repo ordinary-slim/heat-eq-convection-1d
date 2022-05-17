@@ -4,14 +4,14 @@
 #include <regex>
 #include <vector>
 #include "mesh.h"
+#include "gmsheltypes.h"
 
 using namespace std;
 
 void ReadPhysicalNames( ifstream &file, Mesh &m, vector<int> & physicalTags );
-void ReadEntities( ifstream &file, Mesh &m, vector<int> & physicalTags);
-void ReadNodes( ifstream &file, Mesh &m );
-void ReadElements( ifstream &file, Mesh &m );
-
+void ReadEntities( ifstream &file, Mesh &m, vector<int> & physicalTags, vector<vector<int>> & physicalGroups);
+void ReadNodes( ifstream &file, Mesh &m, vector<array<int, 2>> & nodeEntities );
+void ReadElements( ifstream &file, Mesh &m, vector<array<int, 2>> & elementEntities  );
 template <class T>
 int readParams( stringstream &ss, T params[] );
 
@@ -20,6 +20,9 @@ int main(int argc, char *argv[]){
     cout << "About to read: " << fileName << endl;
     Mesh mesh;
     vector<int> physicalTags;
+    vector<vector<int>> physicalGroups;
+    vector<array<int, 2>> nodeEntities;
+    vector<array<int, 2>> elementEntities;
 
     ifstream meshFile( fileName );
     string line;
@@ -33,24 +36,33 @@ int main(int argc, char *argv[]){
                     cout << "Processing physical tags!" << endl;
                     cout << "-------------------------" << endl;
                     ReadPhysicalNames( meshFile, mesh, physicalTags );
-                    for (vector<int>::iterator it = begin(physicalTags); it != end(physicalTags); it++){
-                      cout << "physical tag: " << *it << endl;
-                    }
                 } else if (m.str(1)=="Entities"){
                     cout << "Processing entities:" << endl;
                     cout << "-------------------------" << endl;
-                    ReadEntities( meshFile, mesh, physicalTags );
+                    ReadEntities( meshFile, mesh, physicalTags, physicalGroups);
+                    cout << "Physical groups:" << endl;
+                    for (int i=0; i < physicalGroups.size(); i++){
+                      for (int j=0; j < physicalGroups[i].size(); j++){ 
+                        printf("%3d, ", physicalGroups[i][j]);
+                      }
+                      cout << endl;
+                    }
                 } else if (m.str(1)=="Nodes"){
                     cout << "Processing nodes!" << endl;
                     cout << "-----------------" << endl;
-                    ReadNodes( meshFile, mesh );
+                    ReadNodes( meshFile, mesh, nodeEntities );
+                    cout << "Node entities:" << endl;
+                    for (int i=0; i < nodeEntities.size(); i++){
+                      printf("%3d: %3d, %3d\n", i, nodeEntities[i][0], nodeEntities[i][1]);
+                    }
                 } else if (m.str(1)=="Elements"){
                     cout << "Processing elements!" << endl;
-                    ReadElements( meshFile, mesh );
+                    ReadElements( meshFile, mesh, elementEntities );
                 }
             }
         }
     }
+    cout << "My mesh has " << mesh.nnodes << " nodes." << endl;
     cout << "My mesh is " << mesh.dim << "-dimensional." << endl;
     //mesh.printNodes();
     //end 
@@ -85,12 +97,11 @@ void ReadPhysicalNames( ifstream &file, Mesh &mesh, vector<int> & physicalTags )
         }
     }
 }
-void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
+void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags, vector<vector<int>> &  physicalGroups){
     double params[50];
     int level = 0, paramCount = 0, counter = 0;
     int numPoints, numCurves, numSurfaces, numVolumes;
     int numPhysicalTags; //num physical tags in an entity
-    vector<vector<int>> physicalGroups;
     regex eoBlock( R"(^\$EndEntities)" );
     string line;
     stringstream ss;
@@ -104,9 +115,6 @@ void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
 
         paramCount = readParams<double>( ss, params );
 
-        cout << line << endl;
-        cout << "counter: " << counter << "level:" << level << endl;
-
         if (level==0){
           numPoints = params[0];
           numCurves = params[1];
@@ -119,7 +127,6 @@ void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
           //reading points
           numPhysicalTags = params[4];
           if (numPhysicalTags>0){
-            cout << params[5] << endl;
             physicalGroups.push_back({0, int(params[0]), int(params[5])}); 
           }else{
             physicalGroups.push_back({0, int(params[0]), -1}); 
@@ -132,7 +139,6 @@ void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
         } else if( level==2 ){
           //reading curves
           numPhysicalTags = int(params[7]);
-          cout << "# pt: " << numPhysicalTags << endl;
           if (numPhysicalTags>0){
             physicalGroups.push_back({1, int(params[0]), int(params[8])}); 
           }else{
@@ -170,30 +176,24 @@ void ReadEntities( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
             counter = 0;
           }
         }
-        for (int i=0; i < physicalGroups.size(); i++){
-          cout << "[";
-          for (int j=0; j < physicalGroups[i].size(); j++){ 
-            cout << physicalGroups[i][j] << ", ";
-          }
-          cout << "]" << endl;
-        }
     }
 }
-void ReadNodes( ifstream &file, Mesh &mesh ){
+void ReadNodes( ifstream &file, Mesh &mesh, vector<array<int, 2>> & nodeEntities ){
     regex eoBlock( R"(^\$EndNodes)" );
     double params[50];
     int level = 0;
     int paramCount, tnodeCount = 0, bnodeCount = 0;
     int counter = 0;
-    int entityTag = -1;
+    int entityDim, entityTag;
     string line;
     getline( file, line );
     stringstream ss(line);
-    //read first line
 
+    //read first line
     paramCount = readParams<double>( ss, params);
     mesh.nnodes = params[1];
-    mesh.nodes.resize( mesh.nnodes );
+    mesh.p.resize( mesh.nnodes );
+    nodeEntities.resize(mesh.nnodes);
 
     //read entities, node tags and node positions
     while (getline(file, line) ){
@@ -208,18 +208,27 @@ void ReadNodes( ifstream &file, Mesh &mesh ){
 
         if (level==0){
           //read entity
-          mesh.dim = max( int(params[0]), mesh.dim );
+          entityDim = params[0];
           entityTag = params[1];
           bnodeCount = params[3];
           counter = params[3];
+
+          //update mesh dim
+          mesh.dim = max( entityDim, mesh.dim );
+
           level++;
         } else if( level==1){
+          //reading node index, ignored
           counter--;
           if (counter==0){
             level = 2;
           }
         } else if( level==2){
-          mesh.nodes[tnodeCount] = {params[0], params[1], params[2]};
+          //reading actual node position
+          mesh.p[tnodeCount] = {params[0], params[1], params[2]};
+          nodeEntities[tnodeCount][0] = entityDim;
+          nodeEntities[tnodeCount][1] = entityTag;
+
           tnodeCount++;
           counter++;
           //printf("read node (%2.2f , %2.2f , %2.2f)\n", params[0], params[1], params[2]);
@@ -234,19 +243,62 @@ void ReadNodes( ifstream &file, Mesh &mesh ){
     return;
 }
 
-void ReadElements( ifstream &file, Mesh &mesh ){
+void ReadElements( ifstream &file, Mesh &mesh, vector<array<int, 2>> & elementEntities ){
     regex eoBlock( R"(^\$EndElements)" );
-    int a, b, c, d;
-    int count = 0;
-    double x, y, z, w;
-    //read first line
+    int params[50];
+    int level = 0;
+    int paramCount, tElementCount = 0, bElementCounter = 0;
+    int entityDim, entityTag;
+    int elementType = -1;
     string line;
     getline( file, line );
     stringstream ss(line);
-    if (ss >> a >> b >> c >> d){
-        mesh.nels = b;
-        printf("My mesh has %4d els\n", mesh.nels);
+
+    //read first line
+    paramCount = readParams<int>( ss, params);
+    mesh.nels = params[1];
+    mesh.c.resize( mesh.nels );
+    elementEntities.resize(mesh.nels );
+
+    //read entities, node tags and node positions
+    while (getline(file, line) ){
+        if (regex_search(line, eoBlock)) {
+            return;
+        }
+
+        ss.str(line);
+        ss.clear();
+
+        paramCount = readParams<int>( ss, params );
+
+        cout << line << endl;
+        cout << "Current level " << level << endl;
+
+        if (level==0){
+          //read entity
+          entityDim = params[0];
+          entityTag = params[1];
+          //we could do this with an enum
+          elementType = params[2];
+          bElementCounter = params[3];
+
+          level++;
+        } else if( level==1){
+          //reading element
+          //element type logic
+          mesh.c[tElementCount] = {params[0], params[1], params[2]};
+          elementEntities[tElementCount][0] = entityDim;
+          elementEntities[tElementCount][1] = entityTag;
+
+          tElementCount++;
+          bElementCounter--;
+          //printf("read node (%2.2f , %2.2f , %2.2f)\n", params[0], params[1], params[2]);
+          if (bElementCounter == 0) {
+            level = 0;
+          }
+        }
     }
+
     //problem!
     cerr << "Error in element lecture!" << endl;
     return;
