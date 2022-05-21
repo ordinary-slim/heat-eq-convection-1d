@@ -15,10 +15,8 @@ void ReadElements( ifstream &file, Mesh &m, vector<array<int, 2>> & elementEntit
 template <class T>
 int readParams( stringstream &ss, T params[] );
 
-int main(int argc, char *argv[]){
-    string fileName = argv[1];
+void readGmsh(Mesh &mesh, string fileName){
     cout << "About to read: " << fileName << endl;
-    Mesh mesh;
     vector<int> physicalTags;
     vector<vector<int>> physicalGroups;
     vector<array<int, 2>> nodeEntities;
