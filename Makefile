@@ -1,20 +1,15 @@
 C=g++
 OBJDIR=obj
 SRCDIR=src
-OFiles=$(ls *.o)
 MHFiles=$(ls *.gch)
 
-default: main.$(C)
+default: smolFEM.$C
 
 clean:
-	rm $(OFiles) $(MHFiles)
+	rm $(OBJDIR)/*
 
-mesh.h.gch: mesh.h
-	$(C) -c mesh.h
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	$(C) -c -o $@ $<
 
-readGmsh.o: mesh.h.gch
-	$(C) -c readGmsh.h
-	$(C) -c readGmsh.cpp
-
-main.$C: main.o readGmsh.o
+smolFEM.$C: $(OBJDIR)/main.o $(OBJDIR)/readGmsh.o
 	$(C) -o $@ $^
