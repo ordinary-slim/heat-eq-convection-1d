@@ -1,4 +1,6 @@
 C=g++
+OBJDIR=obj
+SRCDIR=src
 OFiles=$(ls *.o)
 MHFiles=$(ls *.gch)
 
@@ -14,5 +16,5 @@ readGmsh.o: mesh.h.gch
 	$(C) -c readGmsh.h
 	$(C) -c readGmsh.cpp
 
-main.$C: readGmsh.o
-	$(C) -o main main.cpp $^
+main.$C: main.o readGmsh.o
+	$(C) -o $@ $^
