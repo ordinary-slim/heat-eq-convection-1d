@@ -9,5 +9,7 @@ int main(int argc, char *argv[]){
   //read mesh file into mesh object
   readGmsh(mesh, meshFile);
   
+  //print mesh
   mesh.printNodes();
+  mesh.printEls();
 }

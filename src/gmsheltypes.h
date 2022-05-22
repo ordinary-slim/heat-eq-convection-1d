@@ -8,3 +8,5 @@ enum gmsheltypes {
   Tetrahedron1 = 4,
   Hexahedron1 = 5,
 };
+
+map<int, int> gmshNodesPerEl {{1, 2}, {2, 3}, {3, 4}, {4, 4}};

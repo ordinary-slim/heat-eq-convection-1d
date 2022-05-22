@@ -16,6 +16,7 @@ template <class T>
 int readParams( stringstream &ss, T params[] );
 
 void readGmsh(Mesh &mesh, string fileName){
+    cout << "---------------------------------------------" << endl;
     cout << "About to read: " << fileName << endl;
     vector<int> physicalTags;
     vector<vector<int>> physicalGroups;
@@ -31,40 +32,22 @@ void readGmsh(Mesh &mesh, string fileName){
             smatch m;
             if (regex_search(line, m, rgx)){
                 if (m.str(1)=="PhysicalNames") {
-                    cout << "Processing physical tags!" << endl;
-                    cout << "-------------------------" << endl;
                     ReadPhysicalNames( meshFile, mesh, physicalTags );
                 } else if (m.str(1)=="Entities"){
-                    cout << "Processing entities:" << endl;
-                    cout << "-------------------------" << endl;
                     ReadEntities( meshFile, mesh, physicalTags, physicalGroups);
-                    cout << "Physical groups:" << endl;
-                    for (int i=0; i < physicalGroups.size(); i++){
-                      for (int j=0; j < physicalGroups[i].size(); j++){ 
-                        printf("%3d, ", physicalGroups[i][j]);
-                      }
-                      cout << endl;
-                    }
                 } else if (m.str(1)=="Nodes"){
-                    cout << "Processing nodes!" << endl;
-                    cout << "-----------------" << endl;
                     ReadNodes( meshFile, mesh, nodeEntities );
-                    cout << "Node entities:" << endl;
-                    for (int i=0; i < nodeEntities.size(); i++){
-                      printf("%3d: %3d, %3d\n", i, nodeEntities[i][0], nodeEntities[i][1]);
-                    }
                 } else if (m.str(1)=="Elements"){
-                    cout << "Processing elements!" << endl;
                     ReadElements( meshFile, mesh, elementEntities );
                 }
             }
         }
     }
-    cout << "My mesh has " << mesh.nnodes << " nodes." << endl;
-    cout << "My mesh is " << mesh.dim << "-dimensional." << endl;
+    printf("Read %1dd-mesh of %4d els with %4d nodes.\n", mesh.dim, mesh.nels, mesh.nnodes);
     //mesh.printNodes();
     //end 
     meshFile.close();
+    cout << "---------------------------------------------" << endl;
 }
 
 void ReadPhysicalNames( ifstream &file, Mesh &mesh, vector<int> & physicalTags ){
@@ -229,7 +212,6 @@ void ReadNodes( ifstream &file, Mesh &mesh, vector<array<int, 2>> & nodeEntities
 
           tnodeCount++;
           counter++;
-          //printf("read node (%2.2f , %2.2f , %2.2f)\n", params[0], params[1], params[2]);
           if (counter == bnodeCount) {
             level = 0;
           }
@@ -246,7 +228,8 @@ void ReadElements( ifstream &file, Mesh &mesh, vector<array<int, 2>> & elementEn
     int params[50];
     int level = 0;
     int paramCount, tElementCount = 0, bElementCounter = 0;
-    int entityDim, entityTag;
+    int entityDim=-1, entityTag;
+    int nodesPerEl = -1;
     int elementType = -1;
     string line;
     getline( file, line );
@@ -254,11 +237,12 @@ void ReadElements( ifstream &file, Mesh &mesh, vector<array<int, 2>> & elementEn
 
     //read first line
     paramCount = readParams<int>( ss, params);
-    mesh.nels = params[1];
-    mesh.c.resize( mesh.nels );
-    elementEntities.resize(mesh.nels );
+    //mesh.nels = params[1];
+    //mesh.c.resize( mesh.nels );
+    //elementEntities.resize(mesh.nels );
 
     //read entities, node tags and node positions
+    //for time being, only read elements of same dim as problem
     while (getline(file, line) ){
         if (regex_search(line, eoBlock)) {
             return;
@@ -269,28 +253,34 @@ void ReadElements( ifstream &file, Mesh &mesh, vector<array<int, 2>> & elementEn
 
         paramCount = readParams<int>( ss, params );
 
-        cout << line << endl;
-        cout << "Current level " << level << endl;
-
         if (level==0){
           //read entity
           entityDim = params[0];
           entityTag = params[1];
-          //we could do this with an enum
           elementType = params[2];
           bElementCounter = params[3];
 
+          if(entityDim==mesh.dim){
+            mesh.nels += bElementCounter;
+            mesh.c.resize(mesh.nels);
+          }
+          nodesPerEl = gmshNodesPerEl[elementType];
           level++;
-        } else if( level==1){
-          //reading element
-          //element type logic
-          mesh.c[tElementCount] = {params[0], params[1], params[2]};
-          elementEntities[tElementCount][0] = entityDim;
-          elementEntities[tElementCount][1] = entityTag;
+        } else if(level==1){
+          //skip entity if dimension lower than problem's
+          //will have to redesign for Neumann BC
+          if(entityDim==mesh.dim){
+            //reading element
+            mesh.c[tElementCount].resize(nodesPerEl);
+            for(int i=0; i<paramCount; i++){
+              mesh.c[tElementCount][i] = params[i];
+            }
+            //elementEntities[tElementCount][0] = entityDim;
+            //elementEntities[tElementCount][1] = entityTag;
+            tElementCount++;
+          }
 
-          tElementCount++;
           bElementCounter--;
-          //printf("read node (%2.2f , %2.2f , %2.2f)\n", params[0], params[1], params[2]);
           if (bElementCounter == 0) {
             level = 0;
           }
