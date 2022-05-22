@@ -8,7 +8,10 @@ default: smolFEM.$C
 clean:
 	rm $(OBJDIR)/*
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+$(OBJDIR):
+	mkdir $(OBJDIR)
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
 	$(C) -c -o $@ $<
 
 smolFEM.$C: $(OBJDIR)/main.o $(OBJDIR)/readGmsh.o
