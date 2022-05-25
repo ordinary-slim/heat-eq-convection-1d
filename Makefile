@@ -1,4 +1,4 @@
-C=g++
+C=mpic++
 OBJDIR=obj
 SRCDIR=src
 MHFiles=$(ls *.gch)
