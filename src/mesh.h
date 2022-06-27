@@ -1,3 +1,5 @@
+#ifndef mesh_header
+#define mesh_header
 #include <stdio.h>
 #include <iostream>
 #include <array>
@@ -18,7 +20,6 @@ class Mesh {
             cout << "Hello from mesh!" << endl;
         }
         void printNodes(){
-            int count = 0;
             printf("nnodes = %d, dim = %d\n", nnodes, dim);
             for (int i =0; i < p.size(); i++){
                 printf("Node #%2d:   ", i);
@@ -29,7 +30,6 @@ class Mesh {
             }
         }
         void printEls(){
-            int count = 0;
             printf("nels = %d, dim = %d\n", nels, dim);
             for (int i =0; i < c.size(); i++){
                 printf("Element #%2d:   ", i);
@@ -40,3 +40,5 @@ class Mesh {
             }
         }
 };
+#endif
+
