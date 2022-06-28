@@ -28,6 +28,7 @@ int main(int argc, char *argv[]){
   // ASSEMBLY
   // Allocate global problem matrices
   // Iterate over elements
+  p.Assemble();
   // LINEAR SYS SOLUTION
   
   // Finalize the MPI environment.

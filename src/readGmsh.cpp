@@ -43,6 +43,23 @@ void readGmsh(Mesh &mesh, string fileName){
             }
         }
     }
+    cout << "Physical groups array" << endl;
+    cout << "---------------------" << endl;
+    for(int i=0; i<physicalGroups.size(); i++){
+      for(int j=0; j<physicalGroups[i].size(); j++){
+        cout << physicalGroups[i][j] << ", ";
+      }
+      cout << endl;
+    }
+    cout << "Node entities array" << endl;
+    cout << "-------------------" << endl;
+    for(int i=0; i<nodeEntities.size(); i++){
+      for(int j=0; j<2; j++){
+        cout << nodeEntities[i][j] << ", ";
+      }
+      cout << endl;
+    }
+    //nodePointer = MatchNodesNEntities( physicalGroups, nodeEntities );
     printf("Read %1dd-mesh of %4d els with %4d nodes.\n", mesh.dim, mesh.nels, mesh.nnodes);
     //mesh.printNodes();
     //end 
