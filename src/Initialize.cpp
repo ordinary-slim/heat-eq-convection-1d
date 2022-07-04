@@ -3,21 +3,11 @@
 
 void Problem::Initialize(){
   cout << "Initializing problem variables ..." << endl;
-  mesh.p.resize(mesh.nfaces);
+  mesh.p.resize(mesh.nnodes);//implicit assignment to 0, gotta correct
   //ad-hoc BC application: Dirichlet all boundary nodes
   for (int i=0; i < mesh.nfaces; i++){
-    /*
-    std::for_each(mesh.b[i].begin(), mesh.b[i].end(),
-        [](int * j){
-          cout << j << endl;
-        }
-    );
-    */
-    /*
     for (int j: mesh.b[i]) {
-      cout << j << ", ";
+      mesh.p[j] = 1;
     }
-    cout << endl;
-    */
   }
 }

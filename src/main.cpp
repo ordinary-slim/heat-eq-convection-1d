@@ -23,9 +23,10 @@ int main(int argc, char *argv[]){
     //p.mesh.printNodes();
     //p.mesh.printEls();
     //p.mesh.printFaces();
+
+    p.Initialize();//serial, can be parallelized
   }
 
-  p.Initialize();
   // ASSEMBLY
   // Allocate global problem matrices
   // Iterate over elements
