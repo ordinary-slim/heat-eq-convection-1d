@@ -43,27 +43,8 @@ void readGmsh(Mesh &mesh, string fileName){
             }
         }
     }
-    cout << "Physical groups array" << endl;
-    cout << "---------------------" << endl;
-    for(int i=0; i<physicalGroups.size(); i++){
-      for(int j=0; j<physicalGroups[i].size(); j++){
-        cout << physicalGroups[i][j] << ", ";
-      }
-      cout << endl;
-    }
-    cout << "Node entities array" << endl;
-    cout << "-------------------" << endl;
-    for(int i=0; i<nodeEntities.size(); i++){
-      for(int j=0; j<2; j++){
-        cout << nodeEntities[i][j] << ", ";
-      }
-      cout << endl;
-    }
-    //nodePointer = MatchNodesNEntities( physicalGroups, nodeEntities );
-    printf("Read %1dd-mesh of %4d els with %4d nodes.\n", mesh.dim, mesh.nels, mesh.nnodes);
-    //mesh.printNodes();
-    //end 
     meshFile.close();
+    printf("Read %1dd-mesh of %4d els with %4d nodes and %4d faces.\n", mesh.dim, mesh.nels, mesh.nnodes, mesh.nfaces);
     cout << "---------------------------------------------" << endl;
 }
 
@@ -190,7 +171,7 @@ void ReadNodes( ifstream &file, Mesh &mesh, vector<array<int, 2>> & nodeEntities
     //read first line
     paramCount = readParams<double>( ss, params);
     mesh.nnodes = params[1];
-    mesh.p.resize( mesh.nnodes );
+    mesh.x.resize( mesh.nnodes );
     nodeEntities.resize(mesh.nnodes);
 
     //read entities, node tags and node positions
@@ -223,7 +204,7 @@ void ReadNodes( ifstream &file, Mesh &mesh, vector<array<int, 2>> & nodeEntities
           }
         } else if( level==2){
           //reading actual node position
-          mesh.p[tnodeCount] = {params[0], params[1], params[2]};
+          mesh.x[tnodeCount] = {params[0], params[1], params[2]};
           nodeEntities[tnodeCount][0] = entityDim;
           nodeEntities[tnodeCount][1] = entityTag;
 
@@ -244,7 +225,7 @@ void ReadElements( ifstream &file, Mesh &mesh, vector<array<int, 2>> & elementEn
     regex eoBlock( R"(^\$EndElements)" );
     int params[50];
     int level = 0;
-    int paramCount, tElementCount = 0, bElementCounter = 0;
+    int paramCount, tElementCount = 0, tFaceCount = 0, bElementCounter = 0;
     int entityDim=-1, entityTag;
     int nodesPerEl = -1;
     int elementType = -1;
@@ -254,12 +235,8 @@ void ReadElements( ifstream &file, Mesh &mesh, vector<array<int, 2>> & elementEn
 
     //read first line
     paramCount = readParams<int>( ss, params);
-    //mesh.nels = params[1];
-    //mesh.c.resize( mesh.nels );
-    //elementEntities.resize(mesh.nels );
 
     //read entities, node tags and node positions
-    //for time being, only read elements of same dim as problem
     while (getline(file, line) ){
         if (regex_search(line, eoBlock)) {
             return;
@@ -277,24 +254,31 @@ void ReadElements( ifstream &file, Mesh &mesh, vector<array<int, 2>> & elementEn
           elementType = params[2];
           bElementCounter = params[3];
 
-          if(entityDim==mesh.dim){
+          if (entityDim==mesh.dim){
             mesh.nels += bElementCounter;
             mesh.c.resize(mesh.nels);
+          }else if (entityDim==(mesh.dim-1)) {
+            mesh.nfaces += bElementCounter;
+            mesh.b.resize(mesh.nfaces);
           }
+
           nodesPerEl = gmshNodesPerEl[elementType];
           level++;
         } else if(level==1){
-          //skip entity if dimension lower than problem's
-          //will have to redesign for Neumann BC
           if(entityDim==mesh.dim){
             //reading element
             mesh.c[tElementCount].resize(nodesPerEl);
-            for(int i=0; i<paramCount; i++){
-              mesh.c[tElementCount][i] = params[i];
+            for(int i=1; i<paramCount; i++){
+              mesh.c[tElementCount][i-1] = params[i];
             }
-            //elementEntities[tElementCount][0] = entityDim;
-            //elementEntities[tElementCount][1] = entityTag;
             tElementCount++;
+          } else if (entityDim==(mesh.dim-1)) {
+            //reading element
+            mesh.b[tFaceCount].resize(nodesPerEl);
+            for(int i=1; i<paramCount; i++){
+              mesh.b[tFaceCount][i-1] = params[i];
+            }
+            tFaceCount++;
           }
 
           bElementCounter--;

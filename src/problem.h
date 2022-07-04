@@ -13,5 +13,6 @@ class Problem {
     vector<vector<double>> unk;// unknown
     
     void Assemble();
+    void Initialize();
 };
 #endif

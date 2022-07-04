@@ -20,15 +20,15 @@ int main(int argc, char *argv[]){
   if(world_rank==0){
     //read mesh file into mesh object
     readGmsh(p.mesh, meshFile);
-    //print mesh
     //p.mesh.printNodes();
     //p.mesh.printEls();
+    //p.mesh.printFaces();
   }
 
+  p.Assemble();
   // ASSEMBLY
   // Allocate global problem matrices
   // Iterate over elements
-  p.Assemble();
   // LINEAR SYS SOLUTION
   
   // Finalize the MPI environment.
