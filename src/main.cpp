@@ -25,7 +25,7 @@ int main(int argc, char *argv[]){
     //p.mesh.printFaces();
   }
 
-  p.Assemble();
+  p.Initialize();
   // ASSEMBLY
   // Allocate global problem matrices
   // Iterate over elements

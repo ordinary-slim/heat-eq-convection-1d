@@ -254,7 +254,7 @@ void ReadElements( ifstream &file, Mesh &mesh, vector<array<int, 2>> & elementEn
           elementType = params[2];
           bElementCounter = params[3];
 
-          if (entityDim==mesh.dim){
+          if(entityDim==mesh.dim){
             mesh.nels += bElementCounter;
             mesh.c.resize(mesh.nels);
           }else if (entityDim==(mesh.dim-1)) {

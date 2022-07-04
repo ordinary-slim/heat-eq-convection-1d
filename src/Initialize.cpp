@@ -2,6 +2,7 @@
 #include <algorithm>
 
 void Problem::Initialize(){
+  cout << "Initializing problem variables ..." << endl;
   mesh.p.resize(mesh.nfaces);
   //ad-hoc BC application: Dirichlet all boundary nodes
   for (int i=0; i < mesh.nfaces; i++){
