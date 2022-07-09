@@ -27,6 +27,9 @@ int main(int argc, char *argv[]){
     p.Initialize();//serial, can be parallelized
   }
 
+  printf("Processor %d waiting for other processors\n", world_rank);
+  MPI_Barrier(MPI_COMM_WORLD);
+
   // ASSEMBLY
   // Allocate global problem matrices
   // Iterate over elements

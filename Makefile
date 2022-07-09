@@ -4,6 +4,7 @@ SRCDIR=src
 MHFiles=$(ls *.gch)
 CFLAGS=
 LFLAGS=
+METIS_INCLUDE="$(HOME)/bin/METIS/include/"
 
 default: smolFEM.$C
 
@@ -25,3 +26,6 @@ smolFEM.$C: $(OBJDIR)/main.o $(OBJDIR)/readGmsh.o $(OBJDIR)/Assemble.o $(OBJDIR)
 
 smolFEM.g$C: $(OBJDIR)/main.o $(OBJDIR)/readGmsh.o $(OBJDIR)/Assemble.o $(OBJDIR)/Initialize.o
 	$(C) $(LFLAGS) -o $@ $^
+
+print:
+	@echo $(METIS_INCLUDE)
