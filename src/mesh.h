@@ -10,6 +10,7 @@ using namespace std;
 class Mesh {
     public:
         int nnodes = 0, nels = 0, nfaces = 0;
+        int nfnodes = 0;
         int dim = 0;
         
         vector<std::array<double, 3>> x;//nodes
