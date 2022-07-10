@@ -2,6 +2,7 @@
 #include "readGmsh.h"
 #include "InitializeMPI.h"
 #include "problem.h"
+#include <metis.h>
 
 using namespace std;
 

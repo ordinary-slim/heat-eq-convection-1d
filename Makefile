@@ -1,10 +1,14 @@
 C=mpic++
 OBJDIR=obj
 SRCDIR=src
+
+INCLUDE_PATH=$(HOME)/.local/include
+LINK_PATH=$(HOME)/.local/lib
+METIS_LINK=-lmetis
+
 MHFiles=$(ls *.gch)
-CFLAGS=
-LFLAGS=
-METIS_INCLUDE="$(HOME)/bin/METIS/include/"
+CFLAGS=-I$(INCLUDE_PATH)
+LFLAGS=-L$(LINK_PATH) $(METIS_LINK)
 
 default: smolFEM.$C
 
