@@ -1,8 +1,8 @@
 #include <iostream>
 #include "readGmsh.h"
+#include "metisInterface.h"
 #include "InitializeMPI.h"
 #include "problem.h"
-#include <metis.h>
 
 using namespace std;
 
@@ -19,8 +19,12 @@ int main(int argc, char *argv[]){
 
 
   if(world_rank==0){
-    //read mesh file into mesh object
+    //read mesh at rank 0
     readGmsh(p.mesh, meshFile);
+    //call METIS for mesh paritionioning at rank 0
+    if (world_size>1){
+      callMetis(p.mesh, world_size);
+    }
     //p.mesh.printNodes();
     //p.mesh.printEls();
     //p.mesh.printFaces();

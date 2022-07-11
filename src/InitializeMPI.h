@@ -11,7 +11,9 @@ int InitializeMPI(int &world_size, int &world_rank){
   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
   // Print off a hello world message
-  printf("Hello world from processor rank #%d out of %d processors\n", world_rank, world_size);
+  if (world_rank==0){
+    printf("Launched job on %d processors.", world_size);
+  }
 
   return 1;
 }

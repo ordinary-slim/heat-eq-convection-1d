@@ -1,9 +1,10 @@
 Dependencies
 ------------
-METIS
+- METIS (--> GKlib) for domain decomposition across
+processors.
 
 To-do
 -----
-0. In the process of including METIS!
+0. Figure out what to do after mesh partition!
 1. Distributed vector?
 2. Distributed mesh
