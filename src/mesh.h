@@ -16,7 +16,7 @@ class Mesh {
         vector<std::array<double, 3>> x;//nodes
         vector<int> p;//node pointers; 0 free, 1 dirichlet, 2 neumann
         vector<vector<int>> c;//conectivity
-        vector<vector<int>> b;//d-1 connectivity
+        vector<vector<int>> b;//d-1 connectivity of boundary
 
         void myprint(){
             cout << "Hello from mesh!" << endl;

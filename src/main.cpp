@@ -18,12 +18,24 @@ int main(int argc, char *argv[]){
   string meshFile = argv[1];
 
 
+  //read mesh at rank 0
   if(world_rank==0){
     //read mesh at rank 0
     readGmsh(p.mesh, meshFile);
+    if (world_size > 1){
+    }
+    //arrays for mesh paritioning
+  }
+
+  //partitioning
+  if(world_size>1){
+    vector<int> epart;//element partitioning
+    vector<int> npart;//node partitioning
+    epart.resize( p.mesh.nels );
+    npart.resize( p.mesh.nnodes );
     //call METIS for mesh paritionioning at rank 0
-    if (world_size>1){
-      callMetis(p.mesh, world_size);
+    if (world_rank==0){
+      callMetis(epart, npart, p.mesh, world_size);
     }
     //p.mesh.printNodes();
     //p.mesh.printEls();
