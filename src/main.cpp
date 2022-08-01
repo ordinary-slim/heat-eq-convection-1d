@@ -22,10 +22,10 @@ int main(int argc, char *argv[]){
   if(world_rank==0){
     //read mesh at rank 0
     readGmsh(p.mesh, meshFile);
-    if (world_size > 1){
-    }
-    //arrays for mesh paritioning
   }
+  //bcast size of mesh
+  MPI_Bcast( &p.mesh.nnodes, 1, MPI_INT, 0, MPI_COMM_WORLD );
+  MPI_Bcast( &p.mesh.nels, 1, MPI_INT, 0, MPI_COMM_WORLD );
 
   //partitioning
   if(world_size>1){
@@ -37,9 +37,23 @@ int main(int argc, char *argv[]){
     if (world_rank==0){
       callMetis(epart, npart, p.mesh, world_size);
     }
-    //p.mesh.printNodes();
-    //p.mesh.printEls();
-    //p.mesh.printFaces();
+    //bcast partitionning
+    MPI_Bcast( &epart[0], epart.size(), MPI_INT, 0, MPI_COMM_WORLD );
+    MPI_Bcast( &npart[0], npart.size(), MPI_INT, 0, MPI_COMM_WORLD );
+
+    /*
+    if (world_rank==2){
+      for (int i = 0; i < p.mesh.nels; i++){
+        printf("Element %d belongs to partition %d\n", i, epart[i]);
+      }
+      for (int i = 0; i < p.mesh.nnodes; i++){
+        printf("Node %d belongs to partition %d\n", i, npart[i]);
+      }
+    }
+    */
+    //Quick and dirty
+    //Bcast whole mesh then throw out what is not needed
+    // TODO
 
     p.Initialize();//serial, can be parallelized
   }

@@ -3,7 +3,7 @@
 #include "mesh.h"
 #include <metis.h>
 
-void callMetis(vector<int> epart, vector<int> npart, Mesh m, int nparts){
+void callMetis(vector<int>& epart, vector<int>& npart, Mesh m, int nparts){
   //out
   int objval;
 
@@ -36,12 +36,5 @@ void callMetis(vector<int> epart, vector<int> npart, Mesh m, int nparts){
   }
   for (int i=0; i<npart.size(); i++){
     npart[i] = auxnpart[i];
-  }
-
-  for (int i = 0; i < m.nels; i++){
-    printf("Element %d belongs to partition %d\n", i, epart[i]);
-  }
-  for (int i = 0; i < m.nnodes; i++){
-    printf("Node %d belongs to partition %d\n", i, npart[i]);
   }
 }

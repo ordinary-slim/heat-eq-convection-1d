@@ -15,7 +15,7 @@ void ReadElements( ifstream &file, Mesh &m, vector<array<int, 2>> & elementEntit
 template <class T>
 int readParams( stringstream &ss, T params[] );
 
-void readGmsh(Mesh &mesh, string fileName){
+void readGmsh(Mesh &mesh, string fileName, vector<int> *npart= NULL, vector<int> *epart= NULL){
     cout << "---------------------------------------------" << endl;
     cout << "About to read: " << fileName << endl;
     vector<int> physicalTags;
@@ -225,7 +225,7 @@ void ReadElements( ifstream &file, Mesh &mesh, vector<array<int, 2>> & elementEn
     regex eoBlock( R"(^\$EndElements)" );
     int params[50];
     int level = 0;
-    int paramCount, tElementCount = 0, tFaceCount = 0, bElementCounter = 0;
+    int paramCount, tElementCount = 0, tFaceCount = 0, bElementCounter = 0;//t:total, b:block
     int entityDim=-1, entityTag;
     int nodesPerEl = -1;
     int elementType = -1;
