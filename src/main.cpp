@@ -51,9 +51,12 @@ int main(int argc, char *argv[]){
       }
     }
     */
-    //Quick and dirty
-    //Bcast whole mesh then throw out what is not needed
-    // TODO
+    //downgrade partitions to flags
+    //readGmsh(p.mesh, meshFile, &npart, &epart);
+    if (world_rank==0){
+      //p.mesh.printNodes();
+      p.mesh.printEls();
+    }
 
     p.Initialize();//serial, can be parallelized
   }

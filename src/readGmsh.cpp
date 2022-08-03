@@ -273,7 +273,7 @@ void ReadElements( ifstream &file, Mesh &mesh, vector<array<int, 2>> & elementEn
             }
             tElementCount++;
           } else if (entityDim==(mesh.dim-1)) {
-            //reading element
+            //reading boundary element
             mesh.b[tFaceCount].resize(nodesPerEl);
             for(int i=1; i<paramCount; i++){
               mesh.b[tFaceCount][i-1] = params[i];
