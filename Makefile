@@ -14,11 +14,11 @@ METIS_LINK=-lmetis -lGKlib
 CFLAGS=-I$(INCLUDE_PATH) -MMD -MP
 LFLAGS=-L$(LINK_PATH) $(METIS_LINK)
 
-default: smolFEM.$C
+default: smolFEM.$(MCXX)
 
 debug: CFLAGS+= -g
 debug: LFLAGS+= -g
-debug: smolFEM.g$C
+debug: smolFEM.g$(MCXX)
 
 clean:
 	rm $(OBJDIR)/*
@@ -29,16 +29,14 @@ test:
 	mpirun -n 4 smolFEM.mpic++ gmsh_examples/square.msh
 	@echo "-------------------------------"
 
-$(OBJDIR):
-	mkdir $(OBJDIR)
+$(OBJDIR)/%.cpp.o: %.cpp
+	mkdir -p $(dir $@)
+	$(MCXX) $(CFLAGS) -c $< -o $@
 
-$(OBJDIR)/%.cpp.o: %.cpp | $(OBJDIR)
-	$(MCXX) -c $(CFLAGS) -o $@ $<
-
-smolFEM.$C: $(OBJS)
+smolFEM.$(MCXX): $(OBJS)
 	$(MCXX) -o $@ $^ $(LFLAGS) 
 
-smolFEM.g$C: $(OBJDIR)/main.o $(OBJDIR)/readGmsh.o $(OBJDIR)/Assemble.o $(OBJDIR)/Initialize.o $(OBJDIR)/callMetis.o
+smolFEM.g$(MCXX): $(OBJS)
 	$(MCXX) -o $@ $^ $(LFLAGS) 
 
 -include $(DEPS)
